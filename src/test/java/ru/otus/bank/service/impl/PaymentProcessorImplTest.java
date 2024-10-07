@@ -69,7 +69,7 @@ public class PaymentProcessorImplTest {
     @Test
     public void makeTransferWithComissionTest() {
         AccountServiceImpl accountServiceImpl = new AccountServiceImpl(accountDao);
-        PaymentProcessorImpl paymentProcessor = new PaymentProcessorImpl(accountServiceImpl);
+        PaymentProcessorImpl paymentProcessorImpl = new PaymentProcessorImpl(accountServiceImpl);
 
         Long srcAccId = 1L;
         Long dstAccId = 2L;
@@ -94,21 +94,15 @@ public class PaymentProcessorImplTest {
         destAgreement.setId(dstAgrId);
 
         BigDecimal amount = new BigDecimal(500);
-        BigDecimal comissionPercent = new BigDecimal(10);
+        BigDecimal comissionPercent = new BigDecimal(0.1);
 
-        when(accountService.getAccounts(argThat(new ArgumentMatcher<Agreement>() {
-            @Override
-            public boolean matches(Agreement agreement) {return agreement != null && agreement.getId() == srcAgrId;}
-        }))).thenReturn(List.of(sourceAccount));
+        when(accountDao.findByAgreementId(srcAgrId)).thenReturn(List.of(sourceAccount));
+        when(accountDao.findByAgreementId(dstAgrId)).thenReturn(List.of(destAccount));
 
-        when(accountService.getAccounts(argThat(new ArgumentMatcher<Agreement>() {
-            @Override
-            public boolean matches(Agreement agreement) {return agreement != null && agreement.getId() == dstAgrId;}
-        }))).thenReturn(List.of(destAccount));
+        when(accountDao.findById(srcAccId)).thenReturn(Optional.of(sourceAccount));
+        when(accountDao.findById(dstAccId)).thenReturn(Optional.of(destAccount));
 
-
-
-        paymentProcessor.makeTransferWithComission(sourceAgreement, destAgreement, sourceType, destType, amount, comissionPercent);
+        paymentProcessorImpl.makeTransferWithComission(sourceAgreement, destAgreement, sourceType, destType, amount, comissionPercent);
 
         assertEquals(new BigDecimal(450), sourceAccount.getAmount());
     }
